@@ -1,24 +1,26 @@
 import com.google.gson.Gson;
 import entities.*;
 import io.restassured.http.ContentType;
+import io.restassured.module.jsv.JsonSchemaValidator;
 import io.restassured.response.Response;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.math.BigInteger;
-import java.util.Collections;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
 
-public class Practice {
+public class PracticeTask {
 
     String BASE_URL = "https://petstore.swagger.io/v2";
 
     Category snakeCategory = new Category(12, "Snakes");
 
     @Test
-    public void addPet_invalidID () {
+    public void addPet_invalidID() {
 
         System.out.println("Test data for creating Pet is preparing...");
 
@@ -53,7 +55,7 @@ public class Practice {
     }
 
     @Test
-    public void addDeleteCheckPet () {
+    public void addDeleteCheckPet() {
         System.out.println("Test data for creating Pet is preparing...");
 
         BigInteger newPetID = new BigInteger("22");
@@ -105,7 +107,7 @@ public class Practice {
     }
 
     @Test
-    public void addUserCheckSchema () {
+    public void addUserCheckSchema() {
         System.out.println("Test data for creating User is preparing...");
 
         User userToBeRegistered = User.builder()
@@ -137,13 +139,14 @@ public class Practice {
                 .baseUri(BASE_URL)
                 .pathParam("username", "TestUser")
                 .when()
-                .get("/user/{username}");
+                .get("/user/{username}")
+                .then().body(JsonSchemaValidator.matchesJsonSchemaInClasspath("UserSchema.json")).extract().response();
 
         Assert.assertEquals("Status code in not 200", 200, gettingInfoAboutUser.getStatusCode());
     }
 
     @Test
-public void addPetWithStatusSold () throws InterruptedException {
+    public void addPetWithStatusSold() throws InterruptedException {
         System.out.println("Test data for creating Pet is preparing...");
 
         BigInteger newPetID = new BigInteger("22");
@@ -176,9 +179,37 @@ public void addPetWithStatusSold () throws InterruptedException {
 
         Response gettingPetsWithStatusSold = given()
                 .baseUri(BASE_URL)
-                .param("sold")
+                .contentType(ContentType.JSON)
                 .when()
-                .get("/pet/findByStatus");
+                .get("/pet/findByStatus/?status=sold");
 
+        System.out.println("Sold pets request done");
+
+        List<Pet> petsSold = Arrays.stream(gettingPetsWithStatusSold.as(Pet[].class))
+                .filter(pet -> pet.getId().equals(PetToBeAdded.getId()))
+                .collect(Collectors.toList());
+
+        Assert.assertEquals("Name is not needed", PetToBeAdded.getName(), petsSold.get(0).getName());
+
+    }
+
+    @Test
+    public void freeIDs() {
+
+        int idFree = 0;
+
+        for (int i = 1; i <= 100; i++) {
+            int gettingPetsResponse = given()
+                    .baseUri(BASE_URL)
+                    .contentType(ContentType.JSON)
+                    .when()
+                    .get("/pet/" + i)
+                    .then().extract().statusCode();
+
+            if (gettingPetsResponse != 200) {
+                idFree++;
+            }
+        }
+        System.out.println(idFree);
     }
 }
