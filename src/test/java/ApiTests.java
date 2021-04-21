@@ -7,6 +7,7 @@ import io.restassured.response.Response;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Random;
 
@@ -22,7 +23,7 @@ public class ApiTests {
         System.out.println("Test data is preparing...");
 
         Pet PetToBeAdded = Pet.builder()
-                .id(new Random().nextInt(4))
+                .id(BigInteger.valueOf(new Random().nextInt(4)))
                 .category(snakeCategory)
                 .name("Kira")
                 .photoUrls(Collections.singletonList("urls"))
@@ -42,7 +43,7 @@ public class ApiTests {
 
         System.out.println("Preparing for GET request by ID...");
 
-        long id = PetToBeAdded.getId();
+        BigInteger id = PetToBeAdded.getId();
 
         Response gettingInfoAboutPet = given()
                 .baseUri(BASE_URL)
