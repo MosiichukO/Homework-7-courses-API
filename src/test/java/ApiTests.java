@@ -40,8 +40,6 @@ public class ApiTests {
                 .when()
                 .post();
 
-        Pet addedPetResponse = addingPetResponse.as(Pet.class);
-
         System.out.println("Preparing for GET request by ID...");
 
         long id = PetToBeAdded.getId();
@@ -87,8 +85,6 @@ public class ApiTests {
 
 
         System.out.println("Response: " + creatingNewUserResponse.asString());
-
-        User createdUserResponse = creatingNewUserResponse.as(User.class);
 
 
         Assert.assertEquals("Status code in not 200", 200, creatingNewUserResponse.getStatusCode());
